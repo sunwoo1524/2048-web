@@ -50,10 +50,6 @@
 		return _grid;
 	}
 
-	// function rotateGrid(_grid, direction) { // 그리드를 시계방향 도는 반시계방향 90도로 회전시키는 함수
-	// 	// TODO
-	// }
-
 	function control(direction) { // 화살표 키 누르면 작동
 		let changed_grid = JSON.parse(JSON.stringify(grid));
 
@@ -69,7 +65,7 @@
 			}
 			
 			temp = slide(temp, direction == top ? left : right);
-			console.table(temp);
+			console.table(temp); // TODO: 위, 아래 슬라이드 구현
 		}
 
 		// addRandomTile();
