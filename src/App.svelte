@@ -1,7 +1,6 @@
 <script>
     import { onMount } from "svelte";
 	import Tile from "./components/Tile.svelte"
-    import { slide } from "svelte/types/runtime/transition";
 
 	const up = 0;
 	const down = 1;
@@ -30,7 +29,7 @@
 		grid[empty_tiles[random_tile][1]][empty_tiles[random_tile][0]] = Math.floor(Math.random() * 2) == 0 ? 2 : 4;
 	}
 
-	function slideTiles(_grid, direction) { // 슬라이드하여 빈칸 없애는 함수
+	function slideTiles(_grid, direction) { // 좌/우로 슬라이드하여 빈칸 없애는 함수
 		_grid.forEach((row, y) => {
 			_grid[y] = row.filter(el => el != 0);
 		});
@@ -50,12 +49,91 @@
 		return _grid;
 	}
 
-	function control(direction) { // 화살표 키 누르면 작동
-		let changed_grid = JSON.parse(JSON.stringify(grid));
-
+	function control(direction) { // 화살표 키 누르면 작동하는 함수
+		let changed_grid = JSON.parse(JSON.stringify(grid)); // grid 깊은 복사
+		
+		// 타일 슬라이드
 		if (direction == left || direction == right) {
-			changed_grid = slide(changed_grid, direction);
+			changed_grid = slideTiles(changed_grid, direction); // 좌/우 슬라이드
+
+			// 같은 수의 타일 합치기
+			if (direction == left) {
+				for (let y = 0; y < changed_grid.length; y++) {
+					let before_tile = null;
+					for (let x = 0; x < changed_grid[0].length; x++) {
+						if (changed_grid[y][x] != 0) {
+							if (before_tile == changed_grid[y][x]) {
+								changed_grid[y][x - 1] = changed_grid[y][x] * 2;
+								changed_grid[y][x] = 0;
+							}
+							before_tile = changed_grid[y][x];
+						}
+					}
+				}
+			} else {
+				for (let y = 0; y < changed_grid.length; y++) {
+					let before_tile = null;
+					for (let x = changed_grid[0].length - 1; x >= 0; x--) {
+						if (changed_grid[y][x] != 0) {
+							if (before_tile == changed_grid[y][x]) {
+								changed_grid[y][x + 1] = changed_grid[y][x] * 2;
+								changed_grid[y][x] = 0;
+							}
+							before_tile = changed_grid[y][x];
+						}
+					}
+				}
+			}
+			//
+
+			changed_grid = slideTiles(changed_grid, direction); // 한번 더 좌/우 슬라이드
 		} else {
+			let temp = [];
+			for (let y = 0; y < changed_grid.length; y++) { // 행과 열을 바꾸기
+				temp.push([]);
+				for (let x = 0; x < changed_grid[0].length; x++) {
+					temp[y].push(changed_grid[x][y]);
+				}
+			}
+			changed_grid = JSON.parse(JSON.stringify(temp));
+			changed_grid = slideTiles(temp, direction == up ? left : right); // 바꾼 grid를 슬라이드
+			
+			// 같은 수의 타일 합치기
+			if (direction == up) {
+				for (let y = 0; y < changed_grid.length; y++) {
+					let before_tile = null;
+					for (let x = 0; x < changed_grid[0].length; x++) {
+						if (changed_grid[y][x] != 0) {
+							if (before_tile == changed_grid[y][x]) {
+								changed_grid[y][x - 1] = changed_grid[y][x] * 2;
+								changed_grid[y][x] = 0;
+							}
+							before_tile = changed_grid[y][x];
+						}
+					}
+				}
+			} else {
+				for (let y = 0; y < changed_grid.length; y++) {
+					let before_tile = null;
+					for (let x = changed_grid[0].length - 1; x >= 0; x--) {
+						if (changed_grid[y][x] != 0) {
+							if (before_tile == changed_grid[y][x]) {
+								changed_grid[y][x + 1] = changed_grid[y][x] * 2;
+								changed_grid[y][x] = 0;
+							}
+							before_tile = changed_grid[y][x];
+						}
+					}
+				}
+			}
+			//
+
+			changed_grid = slideTiles(temp, direction == up ? left : right); // 바꾼 grid를 한번더 슬라이드
+		}
+		//
+
+		// 슬라이드 및 타일 합체 후 행과 열 원상복귀 (위, 아래 키를 누른 경우만)
+		if (direction == up || direction == down) {
 			let temp = [];
 			for (let y = 0; y < changed_grid.length; y++) {
 				temp.push([]);
@@ -63,12 +141,25 @@
 					temp[y].push(changed_grid[x][y]);
 				}
 			}
-			
-			temp = slide(temp, direction == top ? left : right);
-			console.table(temp); // TODO: 위, 아래 슬라이드 구현
+			changed_grid = temp;
+		}
+		//
+
+		let is_changed_grid = false;
+		for (let y = 0; y < changed_grid.length; y++) { // 기존 grid와 바꾼 grid가 같은지 검사
+			for (let x = 0; x < changed_grid[0].length; x++) {
+				if (grid[y][x] != changed_grid[y][x]) {
+					is_changed_grid = true;
+				}
+			}
+		}
+		
+		if (!is_changed_grid) {
+			return;
 		}
 
-		// addRandomTile();
+		grid = changed_grid;
+		addRandomTile(); // 끝난 후 랜덤 타일 하나 추가
 	}
 
 	onMount(() => {
