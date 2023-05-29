@@ -17,6 +17,8 @@
 		[0, 0, 0, 0]
 	];
 
+	let gameover = false;
+
 	function addRandomTile() { // 빈칸중 랜덤으로 2 또는 4 타일 넣는 함수
 		let empty_tiles = [];
 		let random_tile;
@@ -29,7 +31,7 @@
 		grid[empty_tiles[random_tile][1]][empty_tiles[random_tile][0]] = Math.floor(Math.random() * 2) == 0 ? 2 : 4;
 	}
 
-	function slideTiles(_grid, direction) { // 좌/우로 슬라이드하여 빈칸 없애는 함수
+	function deleteEmpty(_grid, direction) { // 좌/우로 슬라이드하여 빈칸 없애는 함수
 		_grid.forEach((row, y) => {
 			_grid[y] = row.filter(el => el != 0);
 		});
@@ -49,105 +51,128 @@
 		return _grid;
 	}
 
-	function control(direction) { // 화살표 키 누르면 작동하는 함수
-		let changed_grid = JSON.parse(JSON.stringify(grid)); // grid 깊은 복사
-		
+	function slideTiles(_grid, direction) {
 		// 타일 슬라이드
 		if (direction == left || direction == right) {
-			changed_grid = slideTiles(changed_grid, direction); // 좌/우 슬라이드
+			_grid = deleteEmpty(_grid, direction); // 좌/우 슬라이드
 
 			// 같은 수의 타일 합치기
 			if (direction == left) {
-				for (let y = 0; y < changed_grid.length; y++) {
+				for (let y = 0; y < h; y++) {
 					let before_tile = null;
-					for (let x = 0; x < changed_grid[0].length; x++) {
-						if (changed_grid[y][x] != 0) {
-							if (before_tile == changed_grid[y][x]) {
-								changed_grid[y][x - 1] = changed_grid[y][x] * 2;
-								changed_grid[y][x] = 0;
+					for (let x = 0; x < w; x++) {
+						if (_grid[y][x] != 0) {
+							if (before_tile == _grid[y][x]) {
+								_grid[y][x - 1] = _grid[y][x] * 2;
+								_grid[y][x] = 0;
 							}
-							before_tile = changed_grid[y][x];
+							before_tile = _grid[y][x];
 						}
 					}
 				}
 			} else {
-				for (let y = 0; y < changed_grid.length; y++) {
+				for (let y = 0; y < h; y++) {
 					let before_tile = null;
-					for (let x = changed_grid[0].length - 1; x >= 0; x--) {
-						if (changed_grid[y][x] != 0) {
-							if (before_tile == changed_grid[y][x]) {
-								changed_grid[y][x + 1] = changed_grid[y][x] * 2;
-								changed_grid[y][x] = 0;
+					for (let x = w - 1; x >= 0; x--) {
+						if (_grid[y][x] != 0) {
+							if (before_tile == _grid[y][x]) {
+								_grid[y][x + 1] = _grid[y][x] * 2;
+								_grid[y][x] = 0;
 							}
-							before_tile = changed_grid[y][x];
+							before_tile = _grid[y][x];
 						}
 					}
 				}
 			}
 			//
 
-			changed_grid = slideTiles(changed_grid, direction); // 한번 더 좌/우 슬라이드
+			_grid = deleteEmpty(_grid, direction); // 한번 더 좌/우 슬라이드
 		} else {
 			let temp = [];
-			for (let y = 0; y < changed_grid.length; y++) { // 행과 열을 바꾸기
+			for (let y = 0; y < h; y++) { // 행과 열을 바꾸기
 				temp.push([]);
-				for (let x = 0; x < changed_grid[0].length; x++) {
-					temp[y].push(changed_grid[x][y]);
+				for (let x = 0; x < w; x++) {
+					temp[y].push(_grid[x][y]);
 				}
 			}
-			changed_grid = JSON.parse(JSON.stringify(temp));
-			changed_grid = slideTiles(temp, direction == up ? left : right); // 바꾼 grid를 슬라이드
+			_grid = JSON.parse(JSON.stringify(temp));
+			_grid = deleteEmpty(temp, direction == up ? left : right); // 바꾼 grid를 슬라이드
 			
 			// 같은 수의 타일 합치기
 			if (direction == up) {
-				for (let y = 0; y < changed_grid.length; y++) {
+				for (let y = 0; y < h; y++) {
 					let before_tile = null;
-					for (let x = 0; x < changed_grid[0].length; x++) {
-						if (changed_grid[y][x] != 0) {
-							if (before_tile == changed_grid[y][x]) {
-								changed_grid[y][x - 1] = changed_grid[y][x] * 2;
-								changed_grid[y][x] = 0;
+					for (let x = 0; x < w; x++) {
+						if (_grid[y][x] != 0) {
+							if (before_tile == _grid[y][x]) {
+								_grid[y][x - 1] = _grid[y][x] * 2;
+								_grid[y][x] = 0;
 							}
-							before_tile = changed_grid[y][x];
+							before_tile = _grid[y][x];
 						}
 					}
 				}
 			} else {
-				for (let y = 0; y < changed_grid.length; y++) {
+				for (let y = 0; y < h; y++) {
 					let before_tile = null;
-					for (let x = changed_grid[0].length - 1; x >= 0; x--) {
-						if (changed_grid[y][x] != 0) {
-							if (before_tile == changed_grid[y][x]) {
-								changed_grid[y][x + 1] = changed_grid[y][x] * 2;
-								changed_grid[y][x] = 0;
+					for (let x = w - 1; x >= 0; x--) {
+						if (_grid[y][x] != 0) {
+							if (before_tile == _grid[y][x]) {
+								_grid[y][x + 1] = _grid[y][x] * 2;
+								_grid[y][x] = 0;
 							}
-							before_tile = changed_grid[y][x];
+							before_tile = _grid[y][x];
 						}
 					}
 				}
 			}
 			//
 
-			changed_grid = slideTiles(temp, direction == up ? left : right); // 바꾼 grid를 한번더 슬라이드
+			_grid = deleteEmpty(temp, direction == up ? left : right); // 바꾼 grid를 한번더 슬라이드
 		}
 		//
 
 		// 슬라이드 및 타일 합체 후 행과 열 원상복귀 (위, 아래 키를 누른 경우만)
 		if (direction == up || direction == down) {
 			let temp = [];
-			for (let y = 0; y < changed_grid.length; y++) {
+			for (let y = 0; y < h; y++) {
 				temp.push([]);
-				for (let x = 0; x < changed_grid[0].length; x++) {
-					temp[y].push(changed_grid[x][y]);
+				for (let x = 0; x < w; x++) {
+					temp[y].push(_grid[x][y]);
 				}
 			}
-			changed_grid = temp;
+			_grid = temp;
 		}
 		//
 
+		return _grid;
+	}
+
+	function isGameover(_grid) {
+		// 타일을 어느 방향으로 슬라이드해도 바뀌지 않는지 검사 (바뀌지 않으면 게임오버임)
+		let g_up = slideTiles(JSON.parse(JSON.stringify(_grid)), up);
+		let g_down = slideTiles(JSON.parse(JSON.stringify(_grid)), down);
+		let g_left = slideTiles(JSON.parse(JSON.stringify(_grid)), left);
+		let g_right = slideTiles(JSON.parse(JSON.stringify(_grid)), right);
+		let gameover = true;
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				if (g_up[y][x] != _grid[y][x] || g_down[y][x] != _grid[y][x] || g_left[y][x] != _grid[y][x] || g_right[y][x] != _grid[y][x]) {
+					gameover = false;
+				}
+			}
+		}
+		return gameover;
+		//
+	}
+
+	function control(direction) { // 화살표 키 누르면 작동하는 함수
+		let changed_grid = JSON.parse(JSON.stringify(grid)); // grid 깊은 복사
+		changed_grid = slideTiles(changed_grid, direction); // 타일 슬라이드
+
 		let is_changed_grid = false;
-		for (let y = 0; y < changed_grid.length; y++) { // 기존 grid와 바꾼 grid가 같은지 검사
-			for (let x = 0; x < changed_grid[0].length; x++) {
+		for (let y = 0; y < h; y++) { // 기존 grid와 바꾼 grid가 같은지 검사
+			for (let x = 0; x < w; x++) {
 				if (grid[y][x] != changed_grid[y][x]) {
 					is_changed_grid = true;
 				}
@@ -159,19 +184,27 @@
 		}
 
 		grid = changed_grid;
+		
 		addRandomTile(); // 끝난 후 랜덤 타일 하나 추가
+
+		if (isGameover(grid)) {
+			gameover = true;
+			return;
+		}
 	}
 
 	onMount(() => {
 		document.onkeydown = event => {
-			if (event.key == "ArrowUp") {
-				control(up);
-			} else if (event.key == "ArrowDown") {
-				control(down);
-			} else if (event.key == "ArrowLeft") {
-				control(left);
-			} else if (event.key == "ArrowRight") {
-				control(right);
+			if (!gameover) {
+				if (event.key == "ArrowUp") {
+					control(up);
+				} else if (event.key == "ArrowDown") {
+					control(down);
+				} else if (event.key == "ArrowLeft") {
+					control(left);
+				} else if (event.key == "ArrowRight") {
+					control(right);
+				}
 			}
 		}
 
